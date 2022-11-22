@@ -91,16 +91,66 @@ public class Main {
         	TreeItem treeItem0 = new TreeItem(tree,0);
 	    	treeItem0.setText(file.getName());	    	
 	    	treeItem0.setData(file.getPath());
-		    File[] fileList2 = search.searchInsideOfFolder(file.getPath());
-//		    
-//		    if(fileList2!=null) {
-//		        for(File file2 : fileList2) {
-//		        	TreeItem treeItem1 = new TreeItem(treeItem0,0);
-//			    	treeItem1.setText(file2.getName());	    	
-//				    treeItem1.setData(file2.getPath());
-//		        }
-//	        }
+			    	
+	    	System.out.println(file.getPath());
+	    	File[] fileList2 = search.searchInsideOfFolder(file.getPath());
+	    	if(fileList2!=null) {
+		    	for(File file2 : fileList2) {
+		    		TreeItem treeItem1 = new TreeItem(treeItem0,0);
+			    	treeItem1.setText(file2.getName());
+		    	}
+	    	}
+		
         }
+        
+        tree.addListener(SWT.Expand, new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				TreeItem treeitem = (TreeItem)e.item;
+				if(e.item!=null) {
+					String name = e.item.toString();
+					String path;
+					if(e.item.getData()!=null) {
+						path = e.item.getData().toString();											
+					}else {
+						path = null;
+					}
+					SearchList search = new SearchList();
+					File[] fileList = search.searchInsideOfFolder(path);
+					LOG.info(""+fileList);
+			        System.out.println(e.item.toString()+", "+ e.item.getData());
+			        treeitem.clearAll(true);
+			        treeitem.removeAll();;
+			        if(fileList!=null) {			        	
+				        for(File file : fileList) {
+				        	TreeItem treeItem3 = new TreeItem(treeitem,0);
+					    	treeItem3.setText(file.getName());	
+					    	if(file.isFile()) {
+					    		treeItem3.setData("하위 폴더 없음");	
+					    		continue;
+					    	}else {
+							    treeItem3.setData(file.getPath());	
+							    File[] fileList2 = search.searchInsideOfFolder(file.getPath());
+							    if(fileList2==null) {
+						    		continue;
+						    	}
+						    	for(File file2 : fileList2) {
+						    		TreeItem treeItem1 = new TreeItem(treeItem3,0);
+							    	treeItem1.setText(file2.getName());
+						    		if(file2.isFile()) {
+								    	treeItem1.setData("하위 폴더가 없습니다.");
+						    		}else {
+								    	treeItem1.setData(file2.getPath());
+						    		}
+						    	}
+					    	}
+				        }
+			        }else {		        	
+			        	System.out.println("폴더가 아님.");
+			        }
+		        }
+			}
+		});
         
         tree.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -110,7 +160,7 @@ public class Main {
 					String name = e.item.toString();
 					String path;
 					if(e.item.getData()!=null) {
-						path = e.item.getData().toString();						
+						path = e.item.getData().toString();
 											
 					}else {
 						path = null;
@@ -119,37 +169,22 @@ public class Main {
 					FileTableList FTL;
 					List<FileTable> fT = new ArrayList<>();
 					File[] fileList = search.searchInsideOfFolder(path);
-					LOG.info(""+fileList);
-			        System.out.println(e.item.toString()+", "+ e.item.getData());
+					LOG.info(""+fileList);			        
 			        table.removeAll();
 			        if(fileList!=null) {			        	
 				        for(File file : fileList) {
-				        	TreeItem treeItem0 = new TreeItem(treeitem,0);
-					    	treeItem0.setText(file.getName());	    	
-						    treeItem0.setData(file.getPath());
 						    FileTable ft = new FileTable(new File(file.getPath()));
 						    fT.add(ft);
-//						    fileTable.put(file.getName(), )
-//							List<Map> list = new ArrayList<>();
 						    setTT(ft, tableViewer);
 				        }
 				        FTL = new FileTableList(fT, e.item.toString());
 				        System.out.println(FTL.FT);
-				        
-				        
-				        
 			        }else {		        	
 			        	System.out.println("폴더가 아님.");
 			        }
-			        
-			        
-			        
-			        
-				}
-		       
+				}		       
 			}
 		});
-	    
 		shell.open();
 		shell.layout();
 		while (!shell.isDisposed()) {
@@ -172,31 +207,4 @@ public class Main {
 	    				}
 	    		);
 	}
-	
-
-//		static void setTemTree(List<FileNode> children, Tree tree) {
-//			for(FileNode child : children) {
-////		    	System.out.println(child);
-//		    	TreeItem treeItem0 = new TreeItem(tree, 0);
-//			    treeItem0.setText(child.getFile().getName());
-//			    treeItem0.setData(child.getFile());
-//			    FileTree filetree = new FileTree(child.getFile());
-//			    FileNode filenode = filetree.getRootFileNode();
-//			    setTemTree(filenode.getChildren(), treeItem0);
-//		    }
-//				  
-//			
-//		}
-//		static void setTemTree(List<FileNode> children, TreeItem tree) {
-//			for(FileNode child : children) {
-////		    	System.out.println(child);
-//		    	TreeItem treeItem0 = new TreeItem(tree, 0);
-//			    treeItem0.setText(child.getFile().getName());
-//			    treeItem0.setData(child.getFile());
-//			    FileTree filetree = new FileTree(child.getFile());
-//			    FileNode filenode = filetree.getRootFileNode();
-//			    setTemTree(filenode.getChildren(), treeItem0);
-//		    }
-//		}
-	
 }
