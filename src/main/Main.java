@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -23,15 +24,18 @@ import org.eclipse.swt.widgets.TreeItem;
 import datas.FileTable;
 import datas.FileTableList;
 import dir.SearchList;
+import mkshell.AlertShell;
 import mkshell.FileCRUDShell;
 import mkshell.FolderCRUDShell;
+import mkshell.GetZipName;
+import mkshell.WhenClickOkDeleteFilesShell;
 
 public class Main {
 	private static Table table;
 	private final static Logger LOG = Logger.getGlobal();
 	private static FileCRUDShell fileCRUDShell;
 	private static FolderCRUDShell folderCRUDShell;
-	private static final char[] c = { 'i', 'u', 'd' };
+	private static final char[] c = { 'i', 'u', 'd', 'z' };
 
 	/**
 	 * Launch the application.
@@ -42,15 +46,17 @@ public class Main {
 
 		Display display = new Display();
 		Shell shell = new Shell(display);
-		shell.setSize(900, 600);
+		shell.setSize(1098, 626);
 		shell.setText("SWT 과제");
 		shell.setLayout(null);
 		/////////////////////////////////////////////////////////////////////////
 		// 트리, 테이블 셋업
 		final Tree tree = new Tree(shell, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		tree.setBounds(121, 33, 238, 520);
 
-		TableViewer tableViewer = new TableViewer(shell, SWT.BORDER | SWT.FULL_SELECTION);
+		TableViewer tableViewer = new TableViewer(shell, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		Table table_1 = tableViewer.getTable();
+		table_1.setBounds(453, 33, 588, 520);
 
 		TableViewerColumn tableViewerColumn = new TableViewerColumn(tableViewer, SWT.NONE);
 		TableColumn tblclmnFilename = tableViewerColumn.getColumn();
@@ -79,7 +85,6 @@ public class Main {
 
 		leftTree(shell, tree);
 		table = tableViewer.getTable();
-		table.setBounds(360, 50, 515, 495);
 
 		// tree menu
 		Menu treeMenu = new Menu(tree);
@@ -118,11 +123,48 @@ public class Main {
 		MenuItem shellMenuItem_D = new MenuItem(shellMenu, SWT.NONE);
 		shellMenuItem_D.setText("삭제");
 		
+		Button btnFileToZip = new Button(shell, SWT.NONE);
+		btnFileToZip.setBounds(10, 33, 105, 30);
+		btnFileToZip.setText("압축기능");
+		
 		// setup end
 		/////////////////////////////////////////////////////////////////////
-
+		// Event Listener List start
+		
+		//압축기능 
+		Listener FileToZip = new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				final int MAX_SIZE = 1024;
+				System.out.println("///////////////////btn File To Zip - Start/////////////////////");
+				if(table.getSelectionCount()!=0) {
+					
+					System.out.println("table.getSelectionCount() : "+ table.getSelectionCount());
+					String path = tree.getSelection()[0].getData().toString();
+					System.out.println("path : "+path);
+					String[] FilePath = new String[table.getSelectionCount()];
+					List<File> WillBeZipFiles = new ArrayList<>();
+					for(int i =0; i< table.getSelectionCount(); i++) {
+						FilePath[i] = path+"\\"+table.getSelection()[i].getText();
+						File WillBeZipFile = new File(FilePath[i]);				
+						WillBeZipFiles.add(WillBeZipFile);
+						System.out.println(WillBeZipFiles.get(i));
+					}
+					
+					///////////////////////////////////////////////////
+					GetZipName GZN = new GetZipName(path,WillBeZipFiles);
+					GZN.open();
+					////////////////////////////////////////////////////////////////////////
+					
+				}else {
+					Alert("하나 이상의 파일을 테이블에서 선택해 주세요.");					
+				}
+				
+			}
+		};
+		
 		// 생성 , 수정, 삭제 기능 구현
-		// 파일 생성
+		// 빈곳 메뉴 파일 생성
 		Listener createShellButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
@@ -143,31 +185,39 @@ public class Main {
 		Listener createFileInTableButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				// 생성
-				String path = tree.getSelection()[0].getData().toString();						
-				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test");
+				if(tree.getSelection().length ==0) {
+					Alert("create before select folder");
+				}else {
+					// 생성
+					String path = tree.getSelection()[0].getData().toString();						
+					File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test");
+					}
+					// 파일 내용 작성
+					openAndSetFileCRUDShell(path, c[0]);
+					System.out.println("Another Shell open : "+e.item);
 				}
-				// 파일 내용 작성
-				openAndSetFileCRUDShell(path, c[0]);
-				System.out.println("Another Shell open : "+e.item);						
 			}
 		};
 		// 폴더생성
 		Listener createFolderButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				File file = new File(path);
-				file.mkdirs();
-				if (!file.isFile()) {
-					System.out.println("create folder test");
-				}						
-				// 파일 내용 작성
-				openAndSetFolderCRUDShell(path, c[0]);
-				System.out.println("Another Shell open");
+				if(tree.getSelection().length ==0) {
+					Alert("create before select folder");
+				}else {
+					// 생성
+					String path = tree.getSelection()[0].getData().toString();
+					File file = new File(path);
+					file.mkdirs();
+					if (!file.isFile()) {
+						System.out.println("create folder test");
+					}						
+					// 파일 내용 작성
+					openAndSetFolderCRUDShell(path, c[0]);
+					System.out.println("Another Shell open");
+				}
 			}
 		};
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,15 +225,19 @@ public class Main {
 		Listener updateButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test");
+				if(tree.getSelection().length ==0) {
+					Alert("update before select folder");
+				}else {
+					// 생성
+					String path = tree.getSelection()[0].getData().toString();
+					File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test");
+					}
+					// 파일 내용 작성
+					openAndSetFileCRUDShell(path, c[1]);
+					System.out.println("Another Shell open");
 				}
-				// 파일 내용 작성
-				openAndSetFileCRUDShell(path, c[1]);
-				System.out.println("Another Shell open");
 			}
 		};
 		// 테이블 파일 수정
@@ -192,32 +246,41 @@ public class Main {
 			public void handleEvent(Event e) {
 				// 생성
 //				String path = tree.getSelection()[0].getData().toString();
-				String filename = table.getSelection()[0].getText().toString();
-				String path = tree.getSelection()[0].getData().toString();
-				String filePath = path+"\\"+filename;
-				File file = new File(filePath);
-//				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test");
+				
+				if(table.getSelection().length ==0) {
+					Alert("update before select folder");
+				}else {
+					String filename = table.getSelection()[0].getText().toString();
+					String path = tree.getSelection()[0].getData().toString();
+					String filePath = path+"\\"+filename;
+					File file = new File(filePath);
+	//				File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test");
+					}
+					// 파일 내용 작성
+					openAndSetFileCRUDShell(filePath, c[1]);
+					System.out.println("Another Shell open");
 				}
-				// 파일 내용 작성
-				openAndSetFileCRUDShell(filePath, c[1]);
-				System.out.println("Another Shell open");
 			}
 		};
 		// 트리 폴더 이름 수정
 		Listener updateFolderButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test");
+				if(tree.getSelection().length ==0) {
+					Alert("update before select file");
+				}else {
+					// 생성
+					String path = tree.getSelection()[0].getData().toString();
+					File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test");
+					}
+					// 파일 내용 작성
+					openAndSetFolderCRUDShell(path, c[1]);
+					System.out.println("Another Shell open");
 				}
-				// 파일 내용 작성
-				openAndSetFolderCRUDShell(path, c[1]);
-				System.out.println("Another Shell open");
 			}
 		};
 		
@@ -228,19 +291,19 @@ public class Main {
 			@Override
 			public void handleEvent(Event e) {
 
+				if(tree.getSelection().length ==0) {
+					Alert("delete before select folder");
+				}else {
 				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test");
+					String path = tree.getSelection()[0].getData().toString();
+					File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test");
+					}
+					// 파일 내용 작성
+					openAndSetFileCRUDShell(path, c[2]);
+					System.out.println("Another Shell open");
 				}
-				// 파일 내용 작성
-				openAndSetFileCRUDShell(path, c[2]);
-				System.out.println("Another Shell open");
-
-				// 저장
-				// 파일 이름 물어보기
-				// 확인
 			}
 		};
 		
@@ -249,17 +312,20 @@ public class Main {
 
 			@Override
 			public void handleEvent(Event e) {
-
+				if(tree.getSelection().length ==0) {
+					Alert("delete before select folder");
+				}else {
 				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				
-				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test, it is a directory");
+					String path = tree.getSelection()[0].getData().toString();
+					
+					File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test, it is a directory");
+					}
+					// 파일 내용 작성
+					openAndSetFolderCRUDShell(path, c[2]);
+					System.out.println("Another Shell open");
 				}
-				// 파일 내용 작성
-				openAndSetFolderCRUDShell(path, c[2]);
-				System.out.println("Another Shell open");
 			}
 		};
 		
@@ -267,22 +333,31 @@ public class Main {
 		Listener deleteFileInTableButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-
-				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				String filename = table.getSelection()[0].getText().toString();
-				System.out.println("path : "+ path + " , filename : "+filename);
-				String filePath = path+"\\"+filename;
-//						File file = new File(path);
-				File file = new File(filePath);
-				
-				if (file.isFile()) {
-					System.out.println("button click test table , it is a file");
+				if(table.getSelection().length ==0) {
+					Alert("delete before select file in this table");
+				}else {
+					// 생성
+					String[] paths = new String[table.getSelectionCount()];
+					for(int i =0; i< table.getSelectionCount(); i++) {
+						String path = tree.getSelection()[0].getData().toString();						
+						String filename = table.getSelection()[i].getText().toString();
+						System.out.println("path : "+ path + " , filename : "+filename);
+						String filePath = path+"\\"+filename;
+						paths[i] = filePath; 
+		//						File file = new File(path);
+						File file = new File(filePath);
+						
+						if (file.isFile()) {
+							System.out.println("button click test table , it is a file");
+						}
+						// 파일 내용 작성
+//						openAndSetFileCRUDShell(filePath, c[2]);
+		//						openAndSetFileCRUDShell(path, c[2]);
+						System.out.println("Another Shell open");
+					}
+					WhenClickOkDeleteFilesShell testShell = new WhenClickOkDeleteFilesShell(paths);
+					testShell.open();
 				}
-				// 파일 내용 작성
-				openAndSetFileCRUDShell(filePath, c[2]);
-//						openAndSetFileCRUDShell(path, c[2]);
-				System.out.println("Another Shell open");
 			}
 		};
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,6 +373,8 @@ public class Main {
 //		shellMenuItem_D.addListener(SWT.Selection, deleteButtonListener);
 		treeMenuItem_D.addListener(SWT.Selection, deleteFolderButtonListener);
 		tableMenuItem_D.addListener(SWT.Selection, deleteFileInTableButtonListener);
+		//압축기능 버튼
+		btnFileToZip.addListener(SWT.Selection, FileToZip);
 /////////////////////////////////////////////////////////////////////
 // 트리 확장 시 children 출력
 		tree.addListener(SWT.Expand, new Listener() {
@@ -330,8 +407,6 @@ public class Main {
 // 왼쪽 트리 세팅 
 // 파일은 출력하지 않음 
 	static void leftTree(Shell shell, Tree tree) {
-		tree.setLocation(139, 50);
-		tree.setSize(215, 495);
 		SearchList search = new SearchList();
 		File[] fileList = search.searchC();
 		System.out.println(search.toString());
@@ -439,5 +514,9 @@ public class Main {
 		folderCRUDShell = new FolderCRUDShell(c);
 		folderCRUDShell.open();
 		folderCRUDShell.setPath(path);
+	}
+	static void Alert(String str ) {
+		AlertShell alertShell = new AlertShell(str);
+		alertShell.open();
 	}
 }

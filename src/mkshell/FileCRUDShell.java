@@ -2,15 +2,12 @@ package mkshell;
 
 import java.beans.JavaBean;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -23,7 +20,6 @@ public class FileCRUDShell {
 	public String fileName;
 	public String path;
 	private GetFileName getFileName;
-	private CRUDShell crudShell;
 	public FileCRUDShell(char c) {
 		switch (c) {
 		case 'i': {
@@ -44,13 +40,11 @@ public class FileCRUDShell {
 			shell = new Shell(Display.getCurrent());
 			shell.setSize(400, 300);
 			shell.setText("파일 삭제");	
-			deleteFile(shell, this);
+			deleteFile(shell);
 			break;
 		}
 		default:
 			throw new IllegalArgumentException("Unexpected value: " + c);
-	
-	
 		}	
 	}
 	
@@ -97,8 +91,12 @@ public class FileCRUDShell {
 	    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
 	    
 	    btnOK.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent e) {            	
-               addFileText(t.getText(), fileCRUDShell, 'i');
+            public void widgetSelected(SelectionEvent e) {        
+            	if(t.getText()!=null) {
+            		addFileText(t.getText(), fileCRUDShell, 'i');
+            	}else {
+            		Alert("Write text to file");
+            	}
             }
 		});	    
 	    Button btnCancel = new Button(shell, 1);
@@ -125,7 +123,11 @@ public class FileCRUDShell {
 	    
 	    btnOK.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {            	
-            	addFileText(t.getText(), fileCRUDShell, 'u');
+            	if(t.getText()!=null) {
+            		addFileText(t.getText(), fileCRUDShell, 'u');            	
+            	}else {
+            		Alert("Write text to file");
+            	}
             }
 		});	    
 	    Button btnCancel = new Button(shell, 1);
@@ -140,7 +142,7 @@ public class FileCRUDShell {
 	
 	
 	
-	public void deleteFile(Shell shell, FileCRUDShell fileCRUDShell) {
+	public void deleteFile(Shell shell) {
 		GridLayout gridLayout = new GridLayout(1, true);
 		gridLayout.numColumns = 2;
 		shell.setLayout(gridLayout);
@@ -173,5 +175,9 @@ public class FileCRUDShell {
             	close();
             }
 		});        	
+	}
+	static void Alert(String str) {
+		AlertShell alertShell = new AlertShell(str);
+		alertShell.open();
 	}
 }

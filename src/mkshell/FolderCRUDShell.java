@@ -2,15 +2,12 @@ package mkshell;
 
 import java.beans.JavaBean;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -67,16 +64,14 @@ public class FolderCRUDShell {
 	}
 	
 	public void addFileText(String t) {			
-        System.out.println("확인버튼 클릭");
+        System.out.println("btn Ok");
         setFileName(t);
         File file = new File(getPath()+"\\"+getFileName());
-        
-        System.out.println(file.getName());
         if (!file.exists()){
         	file.mkdirs();
         	System.out.println("make directory successful!!!");
         }else {
-        	System.out.println("already exist");
+        	System.out.println("already exist filename : "+file.getName());
         }
         close();
 	}
@@ -99,15 +94,6 @@ public class FolderCRUDShell {
         } else {
             System.out.println("Failed to rename file");
         }
-        
-//        
-//        System.out.println(file.getName());
-//        if (!file.exists()){
-//        	file.mkdirs();
-//        	System.out.println("make directory successful!!!");
-//        }else {
-//        	System.out.println("already exist");
-//        }
         close();
 	}
 	public String getFileName() {
@@ -130,10 +116,16 @@ public class FolderCRUDShell {
 		Button btnOK = new Button(shell, SWT.PUSH);
 	    btnOK.setText("확인");
 	    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
-	    
+	    String beforePath = t.getText();
 	    btnOK.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent e) {            	
-               addFileText(t.getText());
+            public void widgetSelected(SelectionEvent e) {
+            	String nowPath = t.getText();
+            	System.out.println(nowPath==beforePath);
+            	if(nowPath == beforePath) {
+            		Alert("folder name is required");
+            	}else {
+            		addFileText(t.getText());
+            	}
             }
 		});
 	    
@@ -161,8 +153,12 @@ public class FolderCRUDShell {
 	    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
 	    
 	    btnOK.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent e) {            	
-            	FolderRename(t.getText());
+            public void widgetSelected(SelectionEvent e) {     
+            	if(t.getText()==null) {
+            		Alert("folder name is required");
+            	}else {
+            		FolderRename(t.getText());
+            	}
             }
 		});
 	    
@@ -176,7 +172,28 @@ public class FolderCRUDShell {
 		});
 	}
 	
-	
+	public static void deleteFolderInFolder(String path) {
+		File file = new File(path);
+		try {
+			if(file.exists()){
+                File[] folder_list = file.listFiles(); //파일리스트 얻어오기
+					
+				for (int i = 0; i < folder_list.length; i++) {
+				    if(folder_list[i].isFile()) {
+						folder_list[i].delete();
+						System.out.println("file delete success");
+				    }else {
+				    	deleteFolderInFolder(folder_list[i].getPath()); //재귀함수호출
+						System.out.println("dir delete success");
+				    }
+				    folder_list[i].delete();
+				 }
+				file.delete(); //폴더 삭제
+		       }
+		   } catch (Exception error) {
+			error.getStackTrace();
+		   }	
+	}
 	
 	public void deleteFolder(Shell shell) {
 		GridLayout gridLayout = new GridLayout(1, true);
@@ -185,20 +202,9 @@ public class FolderCRUDShell {
 		Button btnOK = new Button(shell, SWT.PUSH);
 	    btnOK.setText("확인");
 	    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
-	    
 	    btnOK.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent e) {            	
-            	File file = new File(getPath());            	
-                System.out.println(file.getName());
-            	if( file.exists() ){
-            		if(file.delete()){
-            			System.out.println("dir delete success");
-            		}else{
-            			System.out.println("dir delete fail");
-            		}
-            	}else{
-            		System.out.println("folder not exist");
-            	}
+            public void widgetSelected(SelectionEvent e) {
+            	deleteFolderInFolder(getPath()); // 폴더안의 폴더 , 파일 삭제 재귀함수
             	close();
             }
 		});
@@ -211,9 +217,9 @@ public class FolderCRUDShell {
             	close();
             }
 		});
-		
-        	
 	}
-	
-
+	static void Alert(String str) {
+		AlertShell alertShell = new AlertShell(str);
+		alertShell.open();
+	}
 }

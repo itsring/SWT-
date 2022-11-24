@@ -10,7 +10,11 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -18,7 +22,7 @@ public class GetFileName {
 	private Shell shell;
 	public String fileName;
 	public String fileType = ".txt";
-	
+	private static final String[] ITEMS = {".txt",".jpg",".png",".pdf",".word",".hwp",".mp3",".mp4"};
 	
 	public GetFileName(String fileText, FileCRUDShell fileCRUDShell, char c) {	
 		shell = new Shell(Display.getCurrent());
@@ -27,13 +31,30 @@ public class GetFileName {
 		case 'i': {
 			shell.setText("파일 이름");
 			GridLayout gridLayout = new GridLayout(1, true);
-			gridLayout.numColumns = 2;
+			gridLayout.numColumns = 3;
 			shell.setLayout(gridLayout);
 			GridData gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
 			Text t = new Text(shell, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 			t.setLayoutData(gridData);
+			// 메뉴 바
+			Menu menu = new Menu(shell, SWT.BAR);
+			shell.setMenuBar(menu);
 			
+
+		    // Create a dropdown Combo
+		    Combo combo = new Combo(shell, SWT.DROP_DOWN);
+		    combo.setItems(ITEMS);
+		    combo.select(0);
+		    combo.addListener(SWT.Selection, new Listener() {	
+				@Override
+				public void handleEvent(Event e) {					
+					fileType=ITEMS[combo.getSelectionIndex()];
+					System.out.println(fileType);
+				}
+			} );
+		    
+		    		
 			Button btnOK = new Button(shell, SWT.PUSH);
 		    btnOK.setText("확인");
 		    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
@@ -45,36 +66,42 @@ public class GetFileName {
 	            	System.out.println("fileText : "+fileText);
 	            	System.out.println("saveFilePath + fileType : "+saveFilePath+fileType);
 	            	File file = new File(saveFilePath+fileType);
-	            	try {
-	            		
-	            		boolean result = false;
-	            		result = file.createNewFile();
-	            		if(file.exists()) {
-	            			FileWriter FW = new FileWriter(file, false);
-	            			FW.write(fileText);
-	            			FW.flush();
-	            			FW.close();
-	            			System.out.println("File Exist, File Name : "+file.getName());
-	            			System.out.println("File Exist, File text : "+fileText);
-	            			AlertShell alert = new AlertShell("create success filename : "+file.getName());
-	            			alert.open();
-	            		}else {
-	            			AlertShell alert = new AlertShell("create fail filename : "+file.getName());
-	            			alert.open();
-//	            			if(result) {
-//		            			FileWriter FW = new FileWriter(file);
-//		            			FW.write(fileText.toString());
-//		            			FW.flush();
-//		            			FW.close();
-//		            			System.out.println("File NOT Exist, File Name : "+file.getName());
-//		            		}else {
-//		            			System.out.println("File Create Fail!!!!! ");
-//		            		}
-	            		}
-	            		
-	            	}catch (IOException error) {
-	            		error.printStackTrace();
-					}
+	            	fileType=ITEMS[combo.getSelectionIndex()];
+	            	System.out.println(fileType);
+	            	if(t.getText()==null) {
+	            		Alert("file name is required");
+	            	}else {
+		            	try {
+//		            		boolean result = false;
+//		            		result = 
+		            		file.createNewFile();
+		            		if(file.exists()) {
+		            			FileWriter FW = new FileWriter(file, false);
+		            			FW.write(fileText);
+		            			FW.flush();
+		            			FW.close();
+		            			System.out.println("File Exist, File Name : "+file.getName());
+		            			System.out.println("File Exist, File text : "+fileText);
+		            			AlertShell alert = new AlertShell("create success filename : "+file.getName());
+		            			alert.open();
+		            		}else {
+		            			AlertShell alert = new AlertShell("create fail filename : "+file.getName());
+		            			alert.open();
+	//	            			if(result) {
+	//		            			FileWriter FW = new FileWriter(file);
+	//		            			FW.write(fileText.toString());
+	//		            			FW.flush();
+	//		            			FW.close();
+	//		            			System.out.println("File NOT Exist, File Name : "+file.getName());
+	//		            		}else {
+	//		            			System.out.println("File Create Fail!!!!! ");
+	//		            		}
+		            		}
+		            		
+		            	}catch (IOException error) {
+		            		error.printStackTrace();
+						}
+	            	}
 	            	fileCRUDShell.close();
 	            }
 			});
@@ -105,7 +132,10 @@ public class GetFileName {
 		    btnOK.setText("확인");
 		    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
 		    btnOK.addSelectionListener(new SelectionAdapter() {
-	            public void widgetSelected(SelectionEvent e) {            	
+	            public void widgetSelected(SelectionEvent e) { 
+	            	if(t.getText()==null) {
+	            		Alert("file name is required");
+	            	}
 	            	addFileNameText(t);
 	            	String saveFilePath = fileCRUDShell.getPath();                	
 	            	System.out.println("saveFilePath : "+saveFilePath);
@@ -208,7 +238,10 @@ public class GetFileName {
 		boolean result = false;
 		return result;
 	}
-	
+	static void Alert(String str) {
+		AlertShell alertShell = new AlertShell(str);
+		alertShell.open();
+	}
 	
 	
 }

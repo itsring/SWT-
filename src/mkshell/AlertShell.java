@@ -16,13 +16,16 @@ public class AlertShell {
 	
 	public AlertShell(String str) {		
 		shell = new Shell(Display.getCurrent());
-		shell.setSize(400, 150);
+		shell.setSize(300, 150);
 		shell.setText("경고");
 		GridLayout gridLayout = new GridLayout(1, true);
 		gridLayout.numColumns = 1;
+		GridData gridData = new GridData(GridData.FILL_BOTH);
+		gridData.horizontalSpan = 1;
 		shell.setLayout(gridLayout);
 		
-		Text text = new Text(shell, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+		Text text = new Text(shell, SWT.MULTI | SWT.BORDER | SWT.WRAP);
+		text.setLayoutData(gridData);
 		text.setText(str);	
 		
 		Button btnOK = new Button(shell, SWT.PUSH);
