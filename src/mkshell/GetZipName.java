@@ -27,6 +27,7 @@ public class GetZipName {
 		shell.setSize(300, 150);
 		shell.setText("압축파일 이름");
 		GridLayout gridLayout = new GridLayout(1, true);
+		gridLayout.numColumns = 2;
 		shell.setLayout(gridLayout);
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 		gridData.horizontalSpan = 2;
@@ -64,7 +65,7 @@ public class GetZipName {
 	    
 	    Button btnCancel = new Button(shell, SWT.PUSH);
 		btnCancel.setText("취소");
-		btnCancel.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_END));	    
+		btnCancel.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));	    
 		btnCancel.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
             	close();

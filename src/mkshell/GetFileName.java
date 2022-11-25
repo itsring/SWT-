@@ -22,7 +22,7 @@ public class GetFileName {
 	private Shell shell;
 	public String fileName;
 	public String fileType = ".txt";
-	private static final String[] ITEMS = {".txt",".jpg",".png",".pdf",".word",".hwp",".mp3",".mp4"};
+	private static final String[] ITEMS = {".txt",".jpg",".png",".pdf",".docs",".hwp",".mp3",".mp4"};
 	
 	public GetFileName(String fileText, FileCRUDShell fileCRUDShell, char c) {	
 		shell = new Shell(Display.getCurrent());
@@ -64,9 +64,10 @@ public class GetFileName {
 	            	String saveFilePath = fileCRUDShell.getPath()+"\\" + getFileName();                	
 	            	System.out.println("saveFilePath : "+saveFilePath);
 	            	System.out.println("fileText : "+fileText);
+	            	fileType=ITEMS[combo.getSelectionIndex()];
 	            	System.out.println("saveFilePath + fileType : "+saveFilePath+fileType);
 	            	File file = new File(saveFilePath+fileType);
-	            	fileType=ITEMS[combo.getSelectionIndex()];
+	            	
 	            	System.out.println(fileType);
 	            	if(t.getText()==null) {
 	            		Alert("file name is required");
@@ -121,13 +122,23 @@ public class GetFileName {
 		case 'u': {
 			shell.setText("파일 이름 수정");
 			GridLayout gridLayout = new GridLayout(1, true);
-			gridLayout.numColumns = 2;
+			gridLayout.numColumns = 3;
 			shell.setLayout(gridLayout);
 			GridData gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
 			Text t = new Text(shell, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 			t.setLayoutData(gridData);
 			
+			Combo combo = new Combo(shell, SWT.DROP_DOWN);
+		    combo.setItems(ITEMS);
+		    combo.select(0);
+		    combo.addListener(SWT.Selection, new Listener() {	
+				@Override
+				public void handleEvent(Event e) {					
+					fileType=ITEMS[combo.getSelectionIndex()];
+					System.out.println(fileType);
+				}
+			} );
 			Button btnOK = new Button(shell, SWT.PUSH);
 		    btnOK.setText("확인");
 		    btnOK.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
@@ -141,32 +152,44 @@ public class GetFileName {
 	            	System.out.println("saveFilePath : "+saveFilePath);
 	            	System.out.println("fileText : "+fileText);
 	            	System.out.println("fileName : "+getFileName());
+	            	fileType=ITEMS[combo.getSelectionIndex()];
 	            	String renamePlusPath = saveFilePath.substring(0, saveFilePath.lastIndexOf("\\")+1)+getFileName()+fileType;
 	            	System.out.println("renamePlusPath : "+renamePlusPath);
 	            	File originFile = new File(saveFilePath);
 	            	File forRenameFile = new File(renamePlusPath);
 //	            	File file = new File(saveFilePath+fileType);
 //	            	
-	            	if (originFile.renameTo(forRenameFile)) {
-	            	    System.out.println("File renamed successfully");
-	            	    System.out.println(" originFile.getName() : " +originFile.getName());
-	            	} else {
-	            	    System.out.println("Failed to rename file");
+	            	if(!originFile.isDirectory()) {
+		            	if (originFile.renameTo(forRenameFile)) {
+		            	    System.out.println("File renamed successfully");
+		            	    System.out.println(" originFile.getName() : " +originFile.getName());
+		            	} else {
+		            	    System.out.println("Failed to rename file");
+		            	}
+		            	try {	            		
+		            		if(forRenameFile.exists()) {
+		            			if(!forRenameFile.isDirectory()) {
+		//	            			FileWriter FW = new FileWriter(forRenameFile, false);
+			            			FileWriter FW = new FileWriter(forRenameFile, true);
+			            			FW.write(fileText);
+			            			FW.flush();
+			            			FW.close();
+			            			System.out.println("File Exist, File Name : "+forRenameFile.getName());
+		            			}
+		            		}
+		            	}catch (IOException error) {
+		            		error.printStackTrace();
+						}
+	            	}else {
+	            		String renamePath = saveFilePath.substring(0, saveFilePath.lastIndexOf("\\")+1)+getFileName();
+	            		File renameTo = new File(renamePath);
+	            		if (originFile.renameTo(renameTo)) {
+		            	    System.out.println("Folder renamed successfully");
+		            	    System.out.println(" originFolder.getName() : " +originFile.getName());
+		            	} else {
+		            	    System.out.println("Failed to rename folder");
+		            	}
 	            	}
-	            	
-	            	
-	            	try {	            		
-	            		if(forRenameFile.exists()) {
-//	            			FileWriter FW = new FileWriter(forRenameFile, false);
-	            			FileWriter FW = new FileWriter(forRenameFile, true);
-	            			FW.write(fileText);
-	            			FW.flush();
-	            			FW.close();
-	            			System.out.println("File Exist, File Name : "+forRenameFile.getName());	            			
-	            		}
-	            	}catch (IOException error) {
-	            		error.printStackTrace();
-					}
 	            	fileCRUDShell.close();
 	            }
 			});

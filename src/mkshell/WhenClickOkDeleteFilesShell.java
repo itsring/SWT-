@@ -18,6 +18,7 @@ public class WhenClickOkDeleteFilesShell {
 	public WhenClickOkDeleteFilesShell(String[] path) {
 		
 		this.path = path;
+		System.out.println(this.path);
 		
 		
 		shell = new Shell(Display.getCurrent());
@@ -34,16 +35,22 @@ public class WhenClickOkDeleteFilesShell {
             public void widgetSelected(SelectionEvent e) {
             	for(int i=0; i< getPath().length; i++) {
 	            	File file = new File(getPath()[i]);
-	                System.out.println(file.getName());
+//	                System.out.println(file.getName());
+	            	System.out.println(getPath()[i]);
 	            	if( file.exists() ){
 	            		if(file.delete()){
 	            			System.out.println("dir delete success");
 	            			close();
 	            		}else{
-	            			System.out.println("dir delete fail");            			
+	            			deleteFolder();            			
 	            		}
 	            	}else{
-	            		System.out.println("folder not exist");
+//	            		if(file.isDirectory()) {
+//	            			
+//	            		}else {
+//	            			System.out.println("folder not exist");	            			
+//	            		}
+	            		deleteFolder();
 	            	}
             	}
             }    	
@@ -72,7 +79,42 @@ public class WhenClickOkDeleteFilesShell {
 		return path;
 	}
 
-
+	
+	
+	public static void deleteFolderInFolder(String path) {
+		File file = new File(path);
+		try {
+			if(file.exists()){
+                File[] folder_list = file.listFiles(); //파일리스트 얻어오기
+					
+				for (int i = 0; i < folder_list.length; i++) {
+				    if(folder_list[i].isFile()) {
+						folder_list[i].delete();
+						System.out.println("file delete success");
+				    }else {
+				    	deleteFolderInFolder(folder_list[i].getPath()); //재귀함수호출
+						System.out.println("dir delete success");
+				    }
+				    folder_list[i].delete();
+				 }
+				file.delete(); //폴더 삭제
+		       }
+		   } catch (Exception error) {
+			error.getStackTrace();
+		   }	
+	}
+	
+	public void deleteFolder() {
+		for (int i = 0; i < getPath().length; i++) {
+//			System.out.println(getPath()[i]);
+			deleteFolderInFolder(getPath()[i]); // 폴더안의 폴더 , 파일 삭제 재귀함수
+		}
+		close();	    
+	}
+	static void Alert(String str) {
+		AlertShell alertShell = new AlertShell(str);
+		alertShell.open();
+	}
 	
 	
 }

@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -29,6 +29,7 @@ import mkshell.FileCRUDShell;
 import mkshell.FolderCRUDShell;
 import mkshell.GetZipName;
 import mkshell.WhenClickOkDeleteFilesShell;
+import org.eclipse.swt.widgets.Label;
 
 public class Main {
 	private static Table table;
@@ -36,27 +37,37 @@ public class Main {
 	private static FileCRUDShell fileCRUDShell;
 	private static FolderCRUDShell folderCRUDShell;
 	private static final char[] c = { 'i', 'u', 'd', 'z' };
-
+	private static Shell shell;
+	static String newLine = System.getProperty("line.separator");
 	/**
 	 * Launch the application.
 	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
+		int x = 20;
+		int y = 20;
+		int width = 1200;
+		int height = 800;
+		int treeWidth = 200;
+		int treeHeight = 520;
 		Display display = new Display();
-		Shell shell = new Shell(display);
-		shell.setSize(1098, 626);
+		shell = new Shell(display);
+//		shell.setSize(1200, 800);
+		shell.setBounds(x, y, treeWidth+700+9*x, treeHeight+8*y);
 		shell.setText("SWT 과제");
 		shell.setLayout(null);
 		/////////////////////////////////////////////////////////////////////////
 		// 트리, 테이블 셋업
-		final Tree tree = new Tree(shell, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		tree.setBounds(121, 33, 238, 520);
+		final Tree tree = new Tree(shell,  SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.MULTI);
+		tree.setBounds(x*2, y*2, treeWidth+2*x, treeHeight+2*y);
+//		tree.setBounds(121, 33, 238, 520);
 
 		TableViewer tableViewer = new TableViewer(shell, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		Table table_1 = tableViewer.getTable();
-		table_1.setBounds(453, 33, 588, 520);
+//		table_1.setBounds(453, 33, 588, 520);
+//		table_1.setBounds(453, 33, 620, 520);
+		table_1.setBounds(treeWidth+6*x, 2*y, 700, treeHeight+2*y);
 
 		TableViewerColumn tableViewerColumn = new TableViewerColumn(tableViewer, SWT.NONE);
 		TableColumn tblclmnFilename = tableViewerColumn.getColumn();
@@ -65,7 +76,7 @@ public class Main {
 
 		TableViewerColumn tableViewerColumn_1 = new TableViewerColumn(tableViewer, SWT.NONE);
 		TableColumn tblclmnNewColumn = tableViewerColumn_1.getColumn();
-		tblclmnNewColumn.setWidth(100);
+		tblclmnNewColumn.setWidth(200);
 		tblclmnNewColumn.setText("Update Date");
 
 		TableViewerColumn tableViewerColumn_2 = new TableViewerColumn(tableViewer, SWT.NONE);
@@ -85,7 +96,7 @@ public class Main {
 
 		leftTree(shell, tree);
 		table = tableViewer.getTable();
-
+		setTableColumnLable(tableViewer, table);
 		// tree menu
 		Menu treeMenu = new Menu(tree);
 		tree.setMenu(treeMenu);
@@ -96,7 +107,11 @@ public class Main {
 		treeMenuItem_U.setText("폴더 이름 수정");
 
 		MenuItem treeMenuItem_D = new MenuItem(treeMenu, SWT.NONE);
-		treeMenuItem_D.setText("폴더 삭제");
+		treeMenuItem_D.setText("폴더 삭제");		
+		
+		MenuItem treeMenuItem_A = new MenuItem(treeMenu, SWT.NONE);
+		treeMenuItem_A.setText("폴더 압축");	
+		
 
 		// table menu
 		Menu tableMenu = new Menu(table);
@@ -109,6 +124,9 @@ public class Main {
 
 		MenuItem tableMenuItem_D = new MenuItem(tableMenu, SWT.NONE);
 		tableMenuItem_D.setText("삭제");
+		
+		MenuItem tableMenuItem_A = new MenuItem(tableMenu, SWT.NONE);
+		tableMenuItem_A.setText("압축");
 
 		// shell menu
 		Menu shellMenu = new Menu(shell);
@@ -123,12 +141,28 @@ public class Main {
 		MenuItem shellMenuItem_D = new MenuItem(shellMenu, SWT.NONE);
 		shellMenuItem_D.setText("삭제");
 		
-		Button btnFileToZip = new Button(shell, SWT.NONE);
-		btnFileToZip.setBounds(10, 33, 105, 30);
-		btnFileToZip.setText("압축기능");
+		Label lblNewLabel = new Label(shell, SWT.NONE);
+		lblNewLabel.setBounds(40, 14, 71, 20);
+		lblNewLabel.setText("파일 트리");
+		
+		Label lblNewLabel_1 = new Label(shell, SWT.NONE);
+		lblNewLabel_1.setBounds(320, 14, 121, 20);
+		lblNewLabel_1.setText("하위 파일 테이블");
 		
 		// setup end
 		/////////////////////////////////////////////////////////////////////
+		
+		
+        int toolbarSize = 30;
+		
+		shell.addMouseMoveListener(e -> showSize(e));
+        
+		
+///////////////////////////////////////////////////////////////////
+		
+		
+		
+		
 		// Event Listener List start
 		
 		//압축기능 
@@ -163,22 +197,57 @@ public class Main {
 			}
 		};
 		
+		Listener FileToZipTree = new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				final int MAX_SIZE = 1024;
+				System.out.println("///////////////////btn File To Zip - Start/////////////////////");
+				if(tree.getSelectionCount()!=0) {
+					
+					System.out.println("tree.getSelectionCount() : "+ tree.getSelectionCount());
+//					String path = tree.getSelection()[0].getData().toString();
+					String path = tree.getSelection()[0].getData().toString().replace(tree.getSelection()[0].getText(), "");
+					System.out.println("path : "+path);
+					String[] FilePath = new String[tree.getSelectionCount()];
+					List<File> WillBeZipFiles = new ArrayList<>();
+					for(int i =0; i< tree.getSelectionCount(); i++) {
+						FilePath[i] = path+"\\"+tree.getSelection()[i].getText();
+						File WillBeZipFile = new File(FilePath[i]);				
+						WillBeZipFiles.add(WillBeZipFile);
+						System.out.println(WillBeZipFiles.get(i));
+					}
+					
+					///////////////////////////////////////////////////
+					GetZipName GZN = new GetZipName(path,WillBeZipFiles);
+					GZN.open();
+					////////////////////////////////////////////////////////////////////////
+					
+				}else {
+					Alert("하나 이상의 파일을 테이블에서 선택해 주세요.");					
+				}
+				
+			}
+		};
+		
 		// 생성 , 수정, 삭제 기능 구현
 		// 빈곳 메뉴 파일 생성
 		Listener createShellButtonListener = new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-
+				if(tree.getSelection().length ==0) {
+					Alert("create before select folder");
+				}else {
 				// 생성
-				String path = tree.getSelection()[0].getData().toString();
-				File file = new File(path);
-				if (!file.isFile()) {
-					System.out.println("button click test");
+					String path = tree.getSelection()[0].getData().toString();
+					File file = new File(path);
+					if (!file.isFile()) {
+						System.out.println("button click test");
+					}
+					// 파일 내용 작성
+					openAndSetFileCRUDShell(path, c[0]);
+					// save
+					System.out.println("Another Shell open");
 				}
-				// 파일 내용 작성
-				openAndSetFileCRUDShell(path, c[0]);
-				// save
-				System.out.println("Another Shell open");
 			}
 		};
 		// 테이블에 파일 생성
@@ -315,18 +384,47 @@ public class Main {
 				if(tree.getSelection().length ==0) {
 					Alert("delete before select folder");
 				}else {
-				// 생성
-					String path = tree.getSelection()[0].getData().toString();
-					
-					File file = new File(path);
-					if (!file.isFile()) {
-						System.out.println("button click test, it is a directory");
+					String[] paths = new String[tree.getSelectionCount()];
+					for(int i =0; i< tree.getSelectionCount(); i++) {
+						String path = tree.getSelection()[i].getData().toString();						
+						String filename = tree.getSelection()[i].getText().toString();
+						System.out.println("path : "+ path + " , filename : "+filename);
+						String filePath = path+"\\"+filename;
+//						paths[i] = filePath;
+						paths[i] = path;
+						System.out.println("paths["+i+"] : "+paths[i]);
+		//						File file = new File(path);
+						File file = new File(filePath);
+						
+						if (file.isFile()) {
+							System.out.println("button click test table , it is a file");
+						}else {
+							System.out.println("button click test, it is a directory");
+						}
+						
+						// 파일 내용 작성
+//						openAndSetFileCRUDShell(filePath, c[2]);
+		//						openAndSetFileCRUDShell(path, c[2]);
+						System.out.println("Another Shell open");
 					}
-					// 파일 내용 작성
-					openAndSetFolderCRUDShell(path, c[2]);
-					System.out.println("Another Shell open");
+					WhenClickOkDeleteFilesShell testShell = new WhenClickOkDeleteFilesShell(paths);
+					testShell.open();
+					
+				
+					
+//				 생성
+//					String path = tree.getSelection()[0].getData().toString();
+//					
+//					File file = new File(path);
+//					if (!file.isFile()) {
+//						System.out.println("button click test, it is a directory");
+//					}
+//					// 파일 내용 작성
+//					openAndSetFolderCRUDShell(path, c[2]);
+//					System.out.println("Another Shell open");
 				}
 			}
+				
 		};
 		
 		// 파일 삭제
@@ -366,15 +464,19 @@ public class Main {
 		treeMenuItem_I.addListener(SWT.Selection, createFolderButtonListener);
 		tableMenuItem_I.addListener(SWT.Selection, createFileInTableButtonListener);		
 		// 수정버튼
-		shellMenuItem_U.addListener(SWT.Selection, updateButtonListener);
+		shellMenuItem_U.addListener(SWT.Selection, updateFolderButtonListener);
+//		shellMenuItem_U.addListener(SWT.Selection, updateButtonListener);
 		treeMenuItem_U.addListener(SWT.Selection, updateFolderButtonListener);
 		tableMenuItem_U.addListener(SWT.Selection, updateFileInTableButtonListener);		
 		// 삭제버튼
-//		shellMenuItem_D.addListener(SWT.Selection, deleteButtonListener);
+		shellMenuItem_D.addListener(SWT.Selection, deleteFolderButtonListener);
 		treeMenuItem_D.addListener(SWT.Selection, deleteFolderButtonListener);
 		tableMenuItem_D.addListener(SWT.Selection, deleteFileInTableButtonListener);
-		//압축기능 버튼
-		btnFileToZip.addListener(SWT.Selection, FileToZip);
+		
+		// 파일 및 폴더 압축
+		tableMenuItem_A.addListener(SWT.Selection, FileToZip);
+		treeMenuItem_A.addListener(SWT.Selection, FileToZipTree);
+		
 /////////////////////////////////////////////////////////////////////
 // 트리 확장 시 children 출력
 		tree.addListener(SWT.Expand, new Listener() {
@@ -490,6 +592,7 @@ public class Main {
 			File[] fileList = search.searchInsideOfFolder(path);
 			LOG.info("" + fileList);
 			table.removeAll();
+			setTableColumnLable(tableViewer, table);
 			if (fileList != null) {
 				for (File file : fileList) {
 					FileTable ft = new FileTable(new File(file.getPath()));
@@ -518,5 +621,18 @@ public class Main {
 	static void Alert(String str ) {
 		AlertShell alertShell = new AlertShell(str);
 		alertShell.open();
+	}
+	public static void setTableColumnLable(TableViewer tableViewer, Table table) {
+		
+		
+		TableItem item = new TableItem(table, SWT.NONE);
+		item.setText(new String[] { "FileName", "Update Date", "Extension", "Size",
+				"Category" });
+		
+	}
+	public static void showSize(MouseEvent e) {
+
+       
+       
 	}
 }

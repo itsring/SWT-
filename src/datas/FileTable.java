@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
 
 public class FileTable {
 	
@@ -43,7 +44,11 @@ public class FileTable {
 			BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
 			
 			this.fileName = files.getName();
-			this.updateDate = ""+attr.lastModifiedTime();
+//			this.updateDate = ""+attr.lastModifiedTime();
+			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+			String strNowDate = simpleDateFormat.format(files.lastModified());
+			this.updateDate = strNowDate;
+			
 			this.fileSize = ""+attr.size();
 			if(files.isFile()) {
 				this.fileCg = "file";			

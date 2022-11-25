@@ -189,6 +189,7 @@ public class FolderCRUDShell {
 				    folder_list[i].delete();
 				 }
 				file.delete(); //폴더 삭제
+				System.out.println("delete complete");
 		       }
 		   } catch (Exception error) {
 			error.getStackTrace();
